@@ -67,6 +67,7 @@ jobs:
         with:
           name: app
           path: ./.next/standalone
+          include-hidden-files: true
 
       - name: 🔍 Diagnostics
         run: |
@@ -125,7 +126,7 @@ jobs:
         uses: azure/webapps-deploy@v3.0.1
         with:
           app-name: ${{ secrets.AZURE_APP_SERVICE_NAME }}
-          package: .
+          package: app
 
-      - name: 🧹 Cleanup
-        run: .
+      # - name: 🧹 Cleanup
+      #   run: rm -rf app
