@@ -46,6 +46,23 @@ jobs:
           cp -R ./public ./.next/standalone/public
           cp -R ./.next/static ./.next/standalone/.next/static
 
+      - name: List contents of .next/standalone
+        run: |
+          echo "Contents of .next/standalone:"
+          ls -al ./.next/standalone
+          echo "Contents of .next/standalone/.next:"
+          ls -al ./.next/standalone/.next || echo ".next not found"
+          echo "Contents of .next/standalone/public:"
+          ls -al ./.next/standalone/public || echo "public not found"
+      - name: List contents of .next/standalone
+        run: |
+          echo "Contents of .next/standalone:"
+          ls -al ./.next/standalone
+          echo "Contents of .next/standalone/.next:"
+          ls -al ./.next/standalone/.next
+          echo "Contents of .next/standalone/public:"
+          ls -al ./.next/standalone/public
+
       # - name: 📂 Copy standalone into the root
       #   run: |
       #     mkdir -p ./site-deploy/.next
