@@ -101,6 +101,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: app
+          path: ./app
 
       - name: 🗝️ Azure Login
         uses: azure/login@v2.2.0
@@ -126,7 +127,7 @@ jobs:
         uses: azure/webapps-deploy@v3.0.1
         with:
           app-name: ${{ secrets.AZURE_APP_SERVICE_NAME }}
-          package: app
+          package: ./app
 
       # - name: 🧹 Cleanup
       #   run: rm -rf app
