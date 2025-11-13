@@ -14,6 +14,10 @@ if (isStatic) {
   extraConfig.output = "export";
   extraConfig.trailingSlash = true;
   extraConfig.skipTrailingSlashRedirect = true;
+} else {
+  // Produce a minimal, self-contained server in .next/standalone
+  // so Azure Web App can run `node server.js` without rebuilding.
+  extraConfig.output = "standalone";
 }
 
 module.exports = {

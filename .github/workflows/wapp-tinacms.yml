@@ -42,7 +42,9 @@ jobs:
           pnpm run build
 
       - name: 📂 Copy standalone into the root
-        run: cp -R ./.next/standalone ./site-deploy
+        run: |
+          mkdir -p ./site-deploy/.next
+          cp -R ./.next/standalone/* ./site-deploy
 
       - name: 📂 Copy static into the .next folder
         run: cp -R ./.next/static ./site-deploy/.next/static
