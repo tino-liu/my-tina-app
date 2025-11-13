@@ -9,6 +9,7 @@
     "build-local-pagefind": "tinacms build && next build && npx pagefind --site .next --output-subdir ../public/pagefind",
     "export": "tinacms build && EXPORT_MODE=static,UNOPTIMIZED_IMAGES=true next build",
     "start": "tinacms build && next start",
+    "start:prod": "node server.js",
     "lint": "biome check src/ tina/",
     "lint:fix": "biome check src/ tina/ --fix",
     "cleanup": "node scripts/cleanup.js",

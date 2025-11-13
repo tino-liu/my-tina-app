@@ -41,10 +41,13 @@ jobs:
           pnpm install
           pnpm run build
 
-      - name: Copy static files
+      - name: Copy static files and configuration
         run: |
           cp -R ./public ./.next/standalone/public
           cp -R ./.next/static ./.next/standalone/.next/static
+          cp package.json ./.next/standalone/package.json
+          cp web.config ./.next/standalone/web.config
+          cp .deployment ./.next/standalone/.deployment
 
       - name: 📦 Create deployment archive with symlinks preserved
         run: |
@@ -60,7 +63,9 @@ jobs:
       - name: 🔍 Diagnostics
         run: |
           ls -al
-          ls ./.next
+          ls -la ./.next
+          ls -la ./.next/standalone 2>/dev/null || echo "No standalone directory found"
+          find ./.next -name "server.js" 2>/dev/null || echo "No server.js found"
 
   deploy:
     runs-on: ubuntu-latest
@@ -85,6 +90,10 @@ jobs:
           mkdir -p app
           tar -xzf deploy.tar.gz -C app
           rm deploy.tar.gz
+          echo "=== Deployment contents ==="
+          ls -la app/
+          echo "=== Checking for server.js ==="
+          find app/ -name "server.js" -o -name "package.json" | head -10
 
       - name: 🗝️ Azure Login
         uses: azure/login@v2.2.0
@@ -98,3 +107,4 @@ jobs:
         with:
           app-name: ${{ secrets.AZURE_APP_SERVICE_NAME }}
           package: ./app
+          startup-command: "node server.js"
