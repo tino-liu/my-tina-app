@@ -27,6 +27,15 @@ jobs:
         with:
           version: 9
 
+      - name: 🔑 Create .env file
+        run: |
+          cat <<'EOF' > .env
+          NEXT_PUBLIC_TINA_CLIENT_ID=${{ secrets.NEXT_PUBLIC_TINA_CLIENT_ID }}
+          TINA_TOKEN=${{ secrets.TINA_TOKEN }}
+          NEXT_PUBLIC_TINA_BRANCH=${{ secrets.NEXT_PUBLIC_TINA_BRANCH }}
+          NEXT_PUBLIC_SITE_URL=${{ secrets.NEXT_PUBLIC_SITE_URL }}
+          EOF
+
       - name: ⚙️ Install dependencies and build
         run: |
           pnpm install
