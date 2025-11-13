@@ -41,33 +41,43 @@ jobs:
           pnpm install
           pnpm run build
 
-      - name: 📂 Copy standalone into the root
+      - name: Copy static files
         run: |
-          mkdir -p ./site-deploy/.next
-          cp -R ./.next/standalone/* ./site-deploy
+          cp -R ./public ./.next/standalone/public
+          cp -R ./.next/static ./.next/standalone/.next/static
 
-      - name: 📂 Copy static into the .next folder
-        run: cp -R ./.next/static ./site-deploy/.next/static
+      # - name: 📂 Copy standalone into the root
+      #   run: |
+      #     mkdir -p ./site-deploy/.next
+      #     cp -R ./.next/standalone/* ./site-deploy
 
-      - name: 📂 Copy Public folder
-        run: cp -R ./public ./site-deploy/public
+      # - name: 📂 Copy static into the .next folder
+      #   run: cp -R ./.next/static ./site-deploy/.next/static
 
-      - name: 📦 Package Next application
-        run: |
-          cd ./site-deploy
-          zip Nextjs-site.zip ./* .next -qr
+      # - name: 📂 Copy Public folder
+      #   run: cp -R ./public ./site-deploy/public
+
+      # - name: 📦 Package Next application
+      #   run: |
+      #     cd ./site-deploy
+      #     zip Nextjs-site.zip ./* .next -qr
+
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v4
+        with:
+          name: app
+          path: ./.next/standalone
 
       - name: 🔍 Diagnostics
         run: |
           ls -al
           ls ./.next
-          ls ./site-deploy
 
-      - name: ⬆️ Publish Next Application artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Nextjs-site
-          path: ./site-deploy/Nextjs-site.zip
+      # - name: ⬆️ Publish Next Application artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: Nextjs-site
+      #     path: ./site-deploy/Nextjs-site.zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -81,10 +91,15 @@ jobs:
         with:
           node-version: "20.x"
 
-      - name: ⬇️ Download artifact from build job
-        uses: actions/download-artifact@v4.1.8
+      # - name: ⬇️ Download artifact from build job
+      #   uses: actions/download-artifact@v4.1.8
+      #   with:
+      #     name: Nextjs-site
+
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v4
         with:
-          name: Nextjs-site
+          name: app
 
       - name: 🗝️ Azure Login
         uses: azure/login@v2.2.0
@@ -93,24 +108,24 @@ jobs:
           environment: AzureChinaCloud
 
       # Set the build during deployment setting to false. This setting was added in the templates to all azd to work, but breaks deployment via webapps-deploy
-      - name: Azure CLI script
-        uses: azure/CLI@v2.1.0
-        with:
-          inlineScript: |
-            az cloud set --name AzureChinaCloud
-            rg=$(az webapp list --query "[?name=='${{ secrets.AZURE_APP_SERVICE_NAME }}'].resourceGroup" --output tsv)
-            echo Setting SCM_DO_BUILD_DURING_DEPLOYMENT=false on app service ${{ secrets.AZURE_APP_SERVICE_NAME }}
-            az webapp config appsettings set -n ${{ secrets.AZURE_APP_SERVICE_NAME }} -g $rg --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false -o none
-            echo Setting --startup-file=\"node server.js\" on app service ${{ secrets.AZURE_APP_SERVICE_NAME }}
-            az webapp config set --startup-file="node server.js" -n ${{ secrets.AZURE_APP_SERVICE_NAME }} -g $rg -o none
-            sleep 10
+      # - name: Azure CLI script
+      #   uses: azure/CLI@v2.1.0
+      #   with:
+      #     inlineScript: |
+      #       az cloud set --name AzureChinaCloud
+      #       rg=$(az webapp list --query "[?name=='${{ secrets.AZURE_APP_SERVICE_NAME }}'].resourceGroup" --output tsv)
+      #       echo Setting SCM_DO_BUILD_DURING_DEPLOYMENT=false on app service ${{ secrets.AZURE_APP_SERVICE_NAME }}
+      #       az webapp config appsettings set -n ${{ secrets.AZURE_APP_SERVICE_NAME }} -g $rg --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false -o none
+      #       echo Setting --startup-file=\"node server.js\" on app service ${{ secrets.AZURE_APP_SERVICE_NAME }}
+      #       az webapp config set --startup-file="node server.js" -n ${{ secrets.AZURE_APP_SERVICE_NAME }} -g $rg -o none
+      #       sleep 10
 
       - name: 🚀 Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3.0.1
         with:
           app-name: ${{ secrets.AZURE_APP_SERVICE_NAME }}
-          package: ${{ github.workspace }}/Nextjs-site.zip
+          package: .
 
       - name: 🧹 Cleanup
-        run: rm ${{ github.workspace }}/Nextjs-site.zip
+        run: .
