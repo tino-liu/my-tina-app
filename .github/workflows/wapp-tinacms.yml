@@ -79,7 +79,9 @@ jobs:
       - name: Extract deployment archive
         run: |
           mkdir -p app
-          tar -xzf deploy.tar.gz -C app
+          mv deploy.tar.gz app/
+          cd app
+          tar -xzf deploy.tar.gz
           rm deploy.tar.gz
 
       - name: 🗝️ Azure Login
