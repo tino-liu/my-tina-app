@@ -41,22 +41,21 @@ jobs:
           pnpm install
           pnpm run build
 
-      - name: 📂 Copy static files
+      - name: Copy static files
         run: |
           cp -R ./public ./.next/standalone/public
           cp -R ./.next/static ./.next/standalone/.next/static
 
-      - name: 📦 Create deployment package
+      - name: Create deployment archive
         run: |
-          mkdir -p ./deploy-package
-          cp -rL ./.next/standalone/* ./deploy-package/
-          cp -rL ./.next/standalone/.* ./deploy-package/ 2>/dev/null || true
+          cd ./.next/standalone
+          tar -czf ../../deploy.tar.gz .
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: app
-          path: ./deploy-package
+          path: ./deploy.tar.gz
 
       - name: 🔍 Diagnostics
         run: |
@@ -90,7 +89,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: app
-          path: ./app
+          path: ./
+
+      - name: 📦 Extract deployment archive
+        run: |
+          mkdir -p ./app
+          tar -xzf ./deploy.tar.gz -C ./app
 
       - name: 🗝️ Azure Login
         uses: azure/login@v2.2.0
