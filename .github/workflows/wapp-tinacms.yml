@@ -94,7 +94,7 @@ jobs:
         uses: azure/login@v2.2.0
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-          environment: AzureChinaCloud
+          # environment: AzureChinaCloud
 
       - name: 🚀 Deploy to Azure Web App
         id: deploy-to-webapp
