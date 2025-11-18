@@ -49,7 +49,7 @@ jobs:
       - name: 📦 Create deployment archive with symlinks preserved
         run: |
           cd ./.next/standalone
-          tar -czf ../../deploy.tar.gz .
+          tar --no-xattrs -czf ../../deploy.tar.gz .
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -76,14 +76,20 @@ jobs:
           name: app
           path: ./
 
-      - name: Extract deployment archive
+      - name: Move deployment archive
         run: |
           mkdir -p app
           mv deploy.tar.gz app/
+
+      - name: Extract deployment archive
+        run: |
           cd app
           tar -xzf deploy.tar.gz
-          rm deploy.tar.gz
 
+      - name: Delete deployment archive
+        run: |
+          rm app/deploy.tar.gz
+     
       - name: 🗝️ Azure Login
         uses: azure/login@v2.2.0
         with:
