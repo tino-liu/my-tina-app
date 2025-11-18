@@ -1,12 +1,9 @@
 name: Build & deploy Next.js app to Azure Web App
 
-# When this action will be executed
+# Trigger on pushes to main and manual dispatch
 on:
-  # Automatically trigger it when detected changes in repo
   push:
     branches: [main]
-
-  # Allow manual workflow trigger
   workflow_dispatch:
 
 jobs:
@@ -14,20 +11,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 🌱 Checkout to the branch
+      - name: "🌱 Checkout repository"
         uses: actions/checkout@v4
 
-      - name: 🍏 Set up Node.js version
+      - name: "🍏 Set up Node.js"
         uses: actions/setup-node@v4
         with:
           node-version: "20.x"
 
-      - name: 📏 Install pnpm
+      - name: "📏 Install pnpm"
         uses: pnpm/action-setup@v2
         with:
           version: 9
 
-      - name: 🔑 Create .env file
+      - name: "🔑 Create .env file"
         run: |
           cat <<'EOF' > .env
           NEXT_PUBLIC_TINA_CLIENT_ID=${{ secrets.NEXT_PUBLIC_TINA_CLIENT_ID }}
@@ -36,27 +33,27 @@ jobs:
           NEXT_PUBLIC_SITE_URL=${{ secrets.NEXT_PUBLIC_SITE_URL }}
           EOF
 
-      - name: ⚙️ Install dependencies and build
+      - name: "⚙️ Install dependencies and build"
         run: |
           pnpm install
           pnpm run build
 
-      - name: Copy static files
+      - name: "📁 Copy static files into standalone bundle"
         run: |
           cp -R ./public ./.next/standalone/public
           cp -R ./.next/static ./.next/standalone/.next/static
 
-      - name: 📦 Create deployment archive with symlinks preserved
+      - name: "📦 Create deployment ZIP (preserve symlinks)"
         run: |
           cd ./.next/standalone
-          tar --no-xattrs -czf ../../deploy.tar.gz .
+          zip -r -q ../../deploy.zip .
 
-      - name: Upload artifact for deployment job
+      - name: "⬆️ Upload artifact for deployment job"
         uses: actions/upload-artifact@v4
         with:
           name: app
-          path: ./deploy.tar.gz
-          include-hidden-files: true
+          path: ./deploy.zip
+          if-no-files-found: error
 
   deploy:
     runs-on: ubuntu-latest
@@ -65,40 +62,25 @@ jobs:
       name: Production
 
     steps:
-      - name: 🍏 Set up Node.js version
+      - name: "🍏 Set up Node.js"
         uses: actions/setup-node@v4
         with:
           node-version: "20.x"
 
-      - name: Download artifact from build job
+      - name: "⬇️ Download build artifact"
         uses: actions/download-artifact@v4
         with:
           name: app
           path: ./
 
-      - name: Move deployment archive
-        run: |
-          mkdir -p app
-          mv deploy.tar.gz app/
-
-      - name: Extract deployment archive
-        run: |
-          cd app
-          tar -xzf deploy.tar.gz
-
-      - name: Delete deployment archive
-        run: |
-          rm app/deploy.tar.gz
-     
-      - name: 🗝️ Azure Login
+      - name: "🗝️ Azure Login"
         uses: azure/login@v2.2.0
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-          # environment: AzureChinaCloud
+          # environment: AzureChinaCloud  # Uncomment if deploying to Azure China Cloud
 
-      - name: 🚀 Deploy to Azure Web App
-        id: deploy-to-webapp
+      - name: "🚀 Deploy to Azure Web App via ZIP"
         uses: azure/webapps-deploy@v3.0.1
         with:
           app-name: ${{ secrets.AZURE_APP_SERVICE_NAME }}
-          package: ./app
+          package: ./deploy.zip
