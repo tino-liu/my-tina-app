@@ -86,7 +86,7 @@ jobs:
           package: ./deploy.zip
 
       - name: "📦 Install production dependencies with pnpm"
-        uses: azure/CLI@v1
+        uses: azure/CLI@v2
         with:
           azcliversion: 2.57.0
           inlineScript: |
